@@ -5,13 +5,13 @@ char testChar = 'Y';
 int shiftIndex = 3;
 
 // 
-char whoAmI = Mod26Alphabet.RightShift(testChar, shiftIndex);
-Console.WriteLine("Shifted Right: " + whoAmI);
+//char whoAmI = Mod26Alphabet.RightShift(testChar, shiftIndex);
+//Console.WriteLine("Shifted Right: " + whoAmI);
+//
+//char whoAmI2 = Mod26Alphabet.LeftShift(whoAmI, shiftIndex);
+//Console.WriteLine("Shifted Left: " + whoAmI2);
 
-char whoAmI2 = Mod26Alphabet.LeftShift(whoAmI, shiftIndex);
-Console.WriteLine("Shifted Left: " + whoAmI2);
-
-String testMessage = "MYTESTMESSAGE";
+String testMessage = "MY TESTMESSAGE";
 Console.WriteLine("testMessage: " + testMessage);
 String encrMessage = MonoShift.Encrypt(testMessage, shiftIndex);
 Console.WriteLine("encrMessage: " + encrMessage);
@@ -54,9 +54,14 @@ public class Mod26Alphabet
 	// right shifted character
 	public static char RightShift(char letter, Int32 offset)
 	{
-		Int32 letterIndex = Index(letter);
-		Int32 offsetIndex = RightShift(letterIndex, offset);
-		return alphabet[offsetIndex];
+		if (Contains(letter))
+		{
+			Int32 letterIndex = Index(letter);
+			Int32 offsetIndex = RightShift(letterIndex, offset);
+			return Value(offsetIndex);
+		}
+		else
+			return letter;
 	}
 
 
@@ -67,9 +72,14 @@ public class Mod26Alphabet
 
 	public static char LeftShift(char letter, Int32 offset)
 	{
-		Int32 letterIndex = Index(letter);
-		Int32 offsetIndex = LeftShift(letterIndex, offset);
-		return alphabet[offsetIndex];
+		if (Contains(letter))
+		{
+			Int32 letterIndex = Index(letter);
+			Int32 offsetIndex = LeftShift(letterIndex, offset);
+			return alphabet[offsetIndex];
+		}
+		else
+			return letter;
 	}
 	
 	// returns message divided into messgeBlockSize words
@@ -107,8 +117,7 @@ public static class MonoShift
 
 	private static char Encrypt(char plainLetter, Int32 shiftIndex)
 	{
-		Int32 shiftedIndex = Mod26Alphabet.RightShift(plainLetter, shiftIndex);
-		return Mod26Alphabet.Value(shiftedIndex);
+		return Mod26Alphabet.RightShift(plainLetter, shiftIndex);
 	}
 
 	public static String Encrypt(String plainMessage, Int32 shiftIndex)
@@ -126,8 +135,7 @@ public static class MonoShift
 
 	private static char Decrypt(char encryptedLetter, Int32 shiftIndex)
 	{
-		Int32 shiftedIndex = Mod26Alphabet.LeftShift(encryptedLetter, shiftIndex);
-		return Mod26Alphabet.Value(shiftedIndex);
+		return Mod26Alphabet.LeftShift(encryptedLetter, shiftIndex);
 	}
 	
 	public static String Decrypt(String encryptedMessage, Int32 shiftIndex)
