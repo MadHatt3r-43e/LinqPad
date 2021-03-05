@@ -11,14 +11,41 @@ int shiftIndex = 3;
 //char whoAmI2 = Mod26Alphabet.LeftShift(whoAmI, shiftIndex);
 //Console.WriteLine("Shifted Left: " + whoAmI2);
 
-String testMessage = "MY TESTMESSAGE";
-Console.WriteLine("testMessage: " + testMessage);
-String encrMessage = MonoShift.Encrypt(testMessage, shiftIndex);
-Console.WriteLine("encrMessage: " + encrMessage);
+String testMessage = "thesunandthemaninthemoon";
+String alphabetMessage = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+// testMessage = alphabetMessage;
 
-String decrMessage = MonoShift.Decrypt(encrMessage, shiftIndex);
-Console.WriteLine("decrMessage: " + decrMessage);
+Console.WriteLine("testMessage: " + testMessage + " length: " + testMessage.Length);
 
+// MonoShift
+//String encrMessage = MonoShift.Encrypt(testMessage, shiftIndex);
+//Console.WriteLine("MonoShift encrMessage: " + encrMessage+ " length: " + encrMessage.Length);
+//
+//String decrMessage = MonoShift.Decrypt(encrMessage, shiftIndex);
+//Console.WriteLine("MonoShift decrMessage: " + decrMessage+ " length: " + decrMessage.Length);
+//
+// Atbash
+//String encrMessage2 = Atbash.Encrypt(testMessage);
+//Console.WriteLine("Atbash encrMessage2: " + encrMessage2 + " length: " + encrMessage2.Length);
+//
+//String decrMessage2 = Atbash.Decrypt(encrMessage2);
+//Console.WriteLine("Atbash decrMessage2: " + decrMessage2 + " length: " + decrMessage2.Length);
+
+// Vigenere Square
+String keyword = "KING";
+String encrMessage3 = VigenereSquare.Encrypt(testMessage, keyword);
+Console.WriteLine("VigenereSquare encrMessage3: " + encrMessage3 + " length: " + encrMessage3.Length);
+
+String decrMessage3 = VigenereSquare.Decrypt(encrMessage3, keyword);
+Console.WriteLine("VigenereSquare decrMessage3: " + decrMessage3 + " length: " + decrMessage3.Length);
+
+int chunkSize = 5;
+String chunkedMessage = MessageMunger.MessageChunkToUpper(decrMessage3, chunkSize);
+Console.WriteLine("Chunked message in blocks of " + chunkSize + ".");
+Console.WriteLine(chunkedMessage);
+
+
+// Right/Left Shifting a character not in the alphabet set will 
 public class Mod26Alphabet
 {
 
@@ -28,17 +55,27 @@ public class Mod26Alphabet
 	public static bool Contains(char c)
 	{
 		Int32 indexC = Index(c);
-		if (indexC >= 0 || indexC <= 25)
+		if (indexC >= 0 && indexC <= 25)
 			return true;
 		else
 			return false;
 	}
 
+	// return a value given index
 	public static char Value(Int32 index)
 	{
-		return alphabet[index];
+		if (index >= 0 && index <= 25)
+		{
+			return alphabet[index];
+		}
+		else
+		{
+			char blank = '-';
+			return blank;
+		}
 	}
 
+	// return an index given char
 	public static Int32 Index(char letter)
 	{
 		return Array.IndexOf(alphabet, letter);
@@ -82,33 +119,91 @@ public class Mod26Alphabet
 			return letter;
 	}
 	
-	// returns message divided into messgeBlockSize words
-	// returns message uppercase
-	// removes any spaces from original message
-	public static String MessageChunk(String message, int messageBlockSize)
+
+}
+
+public static class VigenereSquare
+{
+
+	// Encrypt a single character
+	private static char Encrypt(char plainTextLetter, char key)
 	{
-		int chunkIterator = 0;
-		String chunkedMessage = String.Empty;
-		StringBuilder sb = new StringBuilder();
-		char[] messageArray = message.ToCharArray();
+//		Int32 letterIndex = Mod26Alphabet.Index(letter);
+//		Int32 keyIndex = Mod26Alphabet.Index(key);
+//
+//		Int32 encryptedIndex = Mod26Alphabet.RightShift(letterIndex, keyIndex);
+//		return Mod26Alphabet.Value(encryptedIndex);
+
+		Int32 keyIndex = Mod26Alphabet.Index(key);
+		char encrypted = Mod26Alphabet.RightShift(plainTextLetter, keyIndex);
+		return encrypted;
+	}
+
+	private static char Decrypt(char encryptedTextLetter, char key)
+	{
+		//Int32 encryptedTextLetterIndex = Mod26Alphabet.Index(encryptedTextLetter);
+		Int32 keyIndex = Mod26Alphabet.Index(key);
+		char decrypted = Mod26Alphabet.LeftShift(encryptedTextLetter, keyIndex);
+		return decrypted;
+	}
+
+	// Encrypt a message 
+	public static String Encrypt(String plainTextMessage, String keyword)
+	{
+
+		StringBuilder encrypted = new StringBuilder();
+		Int32 keywordLength = keyword.Length;
+
+		Int32 keywordIterator = 0;
+
+		plainTextMessage = plainTextMessage.ToUpper();
+		keyword = keyword.ToUpper();
+
+		char[] messageArray = plainTextMessage.ToCharArray();
 		foreach (char c in messageArray)
 		{
-			String strC = c.ToString();
-			strC = strC.ToUpper();
-			if (Mod26Alphabet.Contains(Convert.ToChar(strC)))
+			char encryptedChar = Encrypt(c, Convert.ToChar(keyword[keywordIterator]));
+			
+			// increment down keyword
+			keywordIterator++;
+			if (keywordIterator % keywordLength == 0)
 			{
-				sb.Append(strC);
-				chunkIterator++;
-				if (chunkIterator == messageBlockSize - 1)
-				{
-					sb.Append(" ");
-					chunkIterator = 0;
-				}
+				keywordIterator = 0;
 			}
+
+			encrypted.Append(encryptedChar.ToString());
 		}
-		chunkedMessage = sb.ToString();
-		return chunkedMessage;
+		return encrypted.ToString();
 	}
+
+	public static String Decrypt(String encryptedTextMessage, String keyword)
+	{
+
+		StringBuilder decrypted = new StringBuilder();
+		Int32 keywordLength = keyword.Length;
+
+		Int32 keywordIterator = 0;
+
+		encryptedTextMessage = encryptedTextMessage.ToUpper();
+		keyword = keyword.ToUpper();
+
+		char[] messageArray = encryptedTextMessage.ToCharArray();
+		foreach (char c in messageArray)
+		{
+			char decryptedChar = Decrypt(c, Convert.ToChar(keyword[keywordIterator]));
+
+			// increment down keyword
+			keywordIterator++;
+			if (keywordIterator % keywordLength == 0)
+			{
+				keywordIterator = 0;
+			}
+
+			decrypted.Append(decryptedChar.ToString());
+		}
+		return decrypted.ToString();
+	}
+
 }
 
 
@@ -154,6 +249,83 @@ public static class MonoShift
 
 }
 
+public static class MessageMunger
+{
+
+	// returns message divided into messgeBlockSize words
+	// returns message uppercase
+	// removes any spaces from original message
+	public static String MessageChunkToUpper(String message, int messageBlockSize)
+	{
+		int chunkIterator = 0;
+		String chunkedMessage = String.Empty;
+		StringBuilder sb = new StringBuilder();
+		char[] messageArray = message.ToCharArray();
+		foreach (char c in messageArray)
+		{
+			chunkIterator++;
+			String strC = c.ToString();
+			strC = strC.ToUpper();
+			if (Mod26Alphabet.Contains(Convert.ToChar(strC)))
+			{
+				sb.Append(strC);
+				
+				if (chunkIterator == messageBlockSize )
+				{
+					sb.Append(" ");
+					chunkIterator = 0;
+				}
+				
+			}
+		}
+		chunkedMessage = sb.ToString();
+		return chunkedMessage;
+	}
+}
+
+public static class Atbash
+{
+	private static char Encrypt(char plainTextLetter)
+	{
+		Int32 zIndex = 25;
+		Int32 plainTextLetterIndex = Mod26Alphabet.Index(plainTextLetter);
+		return Mod26Alphabet.Value(zIndex - plainTextLetterIndex);
+	}
+
+	public static char Decrypt(char plainTextLetter)
+	{
+		return Encrypt(plainTextLetter);
+	}
+	
+	public static String Encrypt(String plainTextMessage)
+	{
+		StringBuilder encrypted = new StringBuilder();
+
+		char[] messageArray = plainTextMessage.ToCharArray();
+		foreach (char c in messageArray)
+		{
+			char encC = Encrypt(c);
+			String strC = encC.ToString();
+			encrypted.Append(strC);
+		}
+		return encrypted.ToString();
+	}
+
+	public static String Decrypt(String plainTextMessage)
+	{
+		StringBuilder encrypted = new StringBuilder();
+
+		char[] messageArray = plainTextMessage.ToCharArray();
+		foreach (char c in messageArray)
+		{
+			char encC = Decrypt(c);
+			String strC = encC.ToString();
+			encrypted.Append(strC);
+		}
+		return encrypted.ToString();
+	}
+	
+}
 
 //public static class VigenereSquare
 //{
