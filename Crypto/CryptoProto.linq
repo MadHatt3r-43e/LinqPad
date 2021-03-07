@@ -11,7 +11,7 @@ int shiftIndex = 3;
 //char whoAmI2 = Mod26Alphabet.LeftShift(whoAmI, shiftIndex);
 //Console.WriteLine("Shifted Left: " + whoAmI2);
 
-String testMessage = "thesunandthemaninthemoon";
+String testMessage = "thisisaMessageThatIsNotEncrypted";
 String alphabetMessage = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 // testMessage = alphabetMessage;
 
@@ -34,7 +34,7 @@ Console.WriteLine("Atbash decrMessage2: " + decrMessage2 + " length: " + decrMes
 
 // Vigenere Square
 Console.WriteLine("testMessage: " + testMessage + " length: " + testMessage.Length);
-String keyword = "KING";
+String keyword = "alongKeyword";
 String encrMessage3 = VigenereSquare.Encrypt(testMessage, keyword);
 Console.WriteLine("VigenereSquare encrMessage3: " + encrMessage3 + " length: " + encrMessage3.Length + " keyword: " + keyword);
 
@@ -44,7 +44,7 @@ Console.WriteLine("VigenereSquare decrMessage3: " + decrMessage3 + " length: " +
 int chunkSize = 5;
 String chunkedMessage = MessageMunger.MessageChunkToUpper(decrMessage3, chunkSize);
 Console.WriteLine("Chunked message in blocks of " + chunkSize + ".");
-Console.WriteLine(chunkedMessage);
+Console.WriteLine(chunkedMessage); 
 
 
 // Right/Left Shifting a character not in the alphabet set will 

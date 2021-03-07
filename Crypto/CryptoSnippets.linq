@@ -13,5 +13,3 @@ Console.WriteLine("Index of " + checkoutLetter.ToString() + " is " + index);
 Console.WriteLine("Index of " + checkoutLetter2.ToString() + " is " + index2);
 
 Console.WriteLine("(" + index + " + " + index2 + ") % 26 = " + ((index + index2) % 26).ToString() );
-
-3 - 10 + 26
