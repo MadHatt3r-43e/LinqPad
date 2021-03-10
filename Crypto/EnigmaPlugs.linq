@@ -90,7 +90,7 @@ EnigmaMachine em = new EnigmaMachine(om, sp );
 //Char testChar = 'A';
 //Char result = em.FakeyDriver(testChar);
 
-String testMessage = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+String testMessage = "AAAAAAAAAAAA";
 String returnedMessage = String.Empty;
 StringBuilder encryptedSB = new StringBuilder();
 foreach(Char c in testMessage.ToCharArray())
@@ -259,8 +259,8 @@ public class RotorAssembly : EnigmaObject
 		Rotor r2 = new Rotor("III", om, sp);
 		Rotor r3 = new Rotor("IV", om, sp);
 		bool success;
-		Char rotorPlacement = 'Z';
-		Char ringSetting = 'G';
+		Char rotorPlacement = 'K';
+		Char ringSetting = 'B';
 		success = AddRotor(r1, rotorPlacement, ringSetting);
 		success = AddRotor(r2, rotorPlacement, ringSetting);
 		success = AddRotor(r3, rotorPlacement, ringSetting);
@@ -339,7 +339,7 @@ public class Rotor : EnigmaObject
 	public void RingSetting(Char rs)
 	{
 		ringSetting = rs;
-		ringSettingInt = (UInt16)(Convert.ToUInt16(rs));
+		ringSettingInt = (UInt16)(Convert.ToUInt16(rs) % 65);
 	}
 	
 
@@ -348,7 +348,7 @@ public class Rotor : EnigmaObject
 	{
 		UInt16 positionInt = Convert.ToUInt16(position);
 		UInt16 one = 1;
-		position = Convert.ToChar((UInt16) ( ((positionInt + one) % 90) + 65 ) );
+		position = Convert.ToChar((UInt16) ( ((positionInt + one) )  ) );
 		if (om != null)
 		{
 			String advanceInfo = "Position advanced to " + position.ToString();
@@ -362,7 +362,7 @@ public class Rotor : EnigmaObject
 		
 		//Char pos = OffsetByPosition(signal);
 		// Add 0-indexed of RingSetting
-		Char output = map[(Char) ( (UInt16) ( (ringSettingInt + Convert.ToUInt16(position)) % 90 ) + 65 )];
+		Char output = map[(Char) ( (UInt16) ( (ringSettingInt + Convert.ToUInt16(position))  )  )];
 
 		if (sp != null)  sp(signal, output, String.Format("Rotor {0}", this.name));
 		lastOutput = output;
