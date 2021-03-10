@@ -90,7 +90,7 @@ EnigmaMachine em = new EnigmaMachine(om, sp );
 //Char testChar = 'A';
 //Char result = em.FakeyDriver(testChar);
 
-String testMessage = "AAAAA";
+String testMessage = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 String returnedMessage = String.Empty;
 StringBuilder encryptedSB = new StringBuilder();
 foreach(Char c in testMessage.ToCharArray())
@@ -164,11 +164,11 @@ public class EnigmaMachine
 	// User Settings after machine built
 	public void InitMachine()
 	{
-		AddPlugwire('A', 'B');
-		AddPlugwire('J', 'T');
-		AddPlugwire('R', 'S');
-		AddPlugwire('Y', 'D');
-		AddPlugwire('Y', 'D');
+		//AddPlugwire('A', 'B');
+		//AddPlugwire('J', 'T');
+		//AddPlugwire('R', 'S');
+		//AddPlugwire('Y', 'D');
+		//AddPlugwire('Y', 'D');
 
 	}
 	
@@ -259,13 +259,14 @@ public class RotorAssembly : EnigmaObject
 		Rotor r2 = new Rotor("III", om, sp);
 		Rotor r3 = new Rotor("IV", om, sp);
 		bool success;
-		Char rotorPlacement = 'A';
-		success = AddRotor(r1, rotorPlacement);
-		success = AddRotor(r2, rotorPlacement);
-		success = AddRotor(r3, rotorPlacement);
+		Char rotorPlacement = 'Z';
+		Char ringSetting = 'G';
+		success = AddRotor(r1, rotorPlacement, ringSetting);
+		success = AddRotor(r2, rotorPlacement, ringSetting);
+		success = AddRotor(r3, rotorPlacement, ringSetting);
 	}
 	
-	private bool AddRotor(Rotor r, Char rotorPlacement)
+	private bool AddRotor(Rotor r, Char rotorPlacement, Char ringSetting)
 	{
 		if(r == null)
 		{
@@ -276,6 +277,7 @@ public class RotorAssembly : EnigmaObject
 		try
 		{
 			r.position = rotorPlacement;
+			r.RingSetting(ringSetting);
 			rotors.Add(r);
 			if(om != null) om("Added rotor " + r.name.ToString());
 		}
@@ -323,7 +325,7 @@ public class Rotor : EnigmaObject
 		
 		// Default the rotor to RingSetting 'A'
 		// Set after construction as part of 
-		RingSetting('A');
+		
 		if (om != null)
 		{
 			this.om = om;
@@ -334,21 +336,19 @@ public class Rotor : EnigmaObject
 		}
 	}
 
-	private void RingSetting(Char rs)
+	public void RingSetting(Char rs)
 	{
 		ringSetting = rs;
-		ringSettingInt = (UInt16)(Convert.ToUInt16(rs) % 65);
+		ringSettingInt = (UInt16)(Convert.ToUInt16(rs));
 	}
 	
-	private Char OffsetByPosition(Char signal)
-	{
-		Char pos = (Char)(position + (UInt16)(Convert.ToUInt16(signal) % 65));
-		return pos;
-	}
+
 
 	public void Advance()
 	{
-		position++;
+		UInt16 positionInt = Convert.ToUInt16(position);
+		UInt16 one = 1;
+		position = Convert.ToChar((UInt16) ( ((positionInt + one) % 90) + 65 ) );
 		if (om != null)
 		{
 			String advanceInfo = "Position advanced to " + position.ToString();
@@ -356,12 +356,13 @@ public class Rotor : EnigmaObject
 		}
 	}
 	
+	// coming off of ETW or other rotor
 	override public Char ProcessSignal(Char signal)
 	{
 		
-		Char pos = OffsetByPosition(signal);
+		//Char pos = OffsetByPosition(signal);
 		// Add 0-indexed of RingSetting
-		Char output = map[(Char) (Convert.ToUInt16(pos) + ringSettingInt)];
+		Char output = map[(Char) ( (UInt16) ( (ringSettingInt + Convert.ToUInt16(position)) % 90 ) + 65 )];
 
 		if (sp != null)  sp(signal, output, String.Format("Rotor {0}", this.name));
 		lastOutput = output;
@@ -370,6 +371,11 @@ public class Rotor : EnigmaObject
 			String info = String.Format("Rotor {0}: Signal: {1} Position: {2} Last Output: {3} Ringsetting: {4}",
 				name, signal.ToString(), position.ToString(), output.ToString(), ringSetting.ToString());
 			om(info);
+			
+			if(output == this.notch)
+			{
+				om("SignalToAdvanceRotors");
+			}
 			
 		}
 		
