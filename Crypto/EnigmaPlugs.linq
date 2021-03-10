@@ -85,9 +85,22 @@ void ShowObjectProcessing(Char input, Char output, String processingObject)
 	Console.WriteLine(processingObject + ": " + input.ToString() + " => " + output.ToString());
 }
 
+Console.WriteLine("Test Execution");Console.WriteLine();Console.WriteLine();
 EnigmaMachine em = new EnigmaMachine(om, sp );
-Char testChar = 'A';
-Char result = em.FakeyDriver(testChar);
+//Char testChar = 'A';
+//Char result = em.FakeyDriver(testChar);
+
+String testMessage = "AAAAA";
+String returnedMessage = String.Empty;
+StringBuilder encryptedSB = new StringBuilder();
+foreach(Char c in testMessage.ToCharArray())
+{
+	Char encrypted = em.FakeyDriver(c);
+	encryptedSB.Append(encrypted.ToString());
+}
+returnedMessage = encryptedSB.ToString();
+Console.WriteLine(testMessage);
+Console.WriteLine(returnedMessage);
 
 
 // delegate that issues output of function on delegate
@@ -233,7 +246,7 @@ public class RotorAssembly : EnigmaObject
 			Char tmpOut = output;
 			Rotor r = rotors[i];
 			output  = r.map.FirstOrDefault(x => x.Value == output).Key;
-			if (sp != null)  sp(tmpOut, output, String.Format("Rotor {0}:Reverse", r.Name));	
+			if (sp != null)  sp(tmpOut, output, String.Format("Rotor {0}: Reverse", r.name));	
 		}
 		if (sp != null)  sp(signal, output, String.Format("Rotor Assembly: Reverse"));
 		return output;
@@ -246,12 +259,13 @@ public class RotorAssembly : EnigmaObject
 		Rotor r2 = new Rotor("III", om, sp);
 		Rotor r3 = new Rotor("IV", om, sp);
 		bool success;
-		success = AddRotor(r1);
-		success = AddRotor(r2);
-		success = AddRotor(r3);
+		Char rotorPlacement = 'A';
+		success = AddRotor(r1, rotorPlacement);
+		success = AddRotor(r2, rotorPlacement);
+		success = AddRotor(r3, rotorPlacement);
 	}
 	
-	private bool AddRotor(Rotor r)
+	private bool AddRotor(Rotor r, Char rotorPlacement)
 	{
 		if(r == null)
 		{
@@ -261,8 +275,9 @@ public class RotorAssembly : EnigmaObject
 		bool rotorAdded = true;
 		try
 		{
+			r.position = rotorPlacement;
 			rotors.Add(r);
-			if(om != null) om("Added rotor " + r.Name.ToString());
+			if(om != null) om("Added rotor " + r.name.ToString());
 		}
 		catch ( Exception ex)
 		{
@@ -274,22 +289,41 @@ public class RotorAssembly : EnigmaObject
 	
 	private void AdvanceRotors()
 	{
+		Rotor r = rotors[0];
+		r.Advance();
 		if(om != null) om("Advance Rotors");
 	}
 }
 
 public class Rotor : EnigmaObject
 {
+	// messaging delegates
 	private OutputMessage om;
 	private ShowProcess sp;
-	private String name;
-	public String Name { get; set;}
-	public Dictionary<Char, Char> map;
+
+	// fixed property of the rotors
+	public readonly String name;
+	public readonly Dictionary<Char, Char> map;
+	private readonly Char notch;
+	
+	// ring that rotates 
+	private Char ringSetting;
+	// integer representation of ringsetting used for offsetting signal processing
+	private UInt16 ringSettingInt;
+	
+	// Position of rotor.  The Letter facing from the Ring.  As the machine operates, the rotor position changes with each keypress.
+	public Char position;
+	private Char lastOutput;
 	
 	public Rotor(String Name, OutputMessage om = null, ShowProcess sp = null)
 	{
-		this.Name = Name;
+		name = Name;
+		notch = MapConfig.Notch(Name);
 		map = MapConfig.Rotor(Name);
+		
+		// Default the rotor to RingSetting 'A'
+		// Set after construction as part of 
+		RingSetting('A');
 		if (om != null)
 		{
 			this.om = om;
@@ -299,14 +333,50 @@ public class Rotor : EnigmaObject
 			this.sp = sp;
 		}
 	}
+
+	private void RingSetting(Char rs)
+	{
+		ringSetting = rs;
+		ringSettingInt = (UInt16)(Convert.ToUInt16(rs) % 65);
+	}
+	
+	private Char OffsetByPosition(Char signal)
+	{
+		Char pos = (Char)(position + (UInt16)(Convert.ToUInt16(signal) % 65));
+		return pos;
+	}
+
+	public void Advance()
+	{
+		position++;
+		if (om != null)
+		{
+			String advanceInfo = "Position advanced to " + position.ToString();
+			om(advanceInfo);
+		}
+	}
+	
 	override public Char ProcessSignal(Char signal)
 	{
-		Char output = map[signal];
+		
+		Char pos = OffsetByPosition(signal);
+		// Add 0-indexed of RingSetting
+		Char output = map[(Char) (Convert.ToUInt16(pos) + ringSettingInt)];
 
-		if (sp != null)  sp(signal, output, String.Format("Rotor {0}", this.Name));
+		if (sp != null)  sp(signal, output, String.Format("Rotor {0}", this.name));
+		lastOutput = output;
+		if (om != null)
+		{
+			String info = String.Format("Rotor {0}: Signal: {1} Position: {2} Last Output: {3} Ringsetting: {4}",
+				name, signal.ToString(), position.ToString(), output.ToString(), ringSetting.ToString());
+			om(info);
+			
+		}
 		
 		return output;
 	}
+	
+
 }
 
 
@@ -384,6 +454,27 @@ public static class MapConfig
 		return map;
 	}
 
+	public static Char Notch(String name)
+	{
+		Char notch = 'A';
+		
+		switch ( name )
+		{
+			case "I":
+				notch = 'Q';
+				break;
+			case "II":
+				notch = 'E';
+				break;
+			case "III":
+				notch = 'V';
+				break;
+			case "IV":
+				notch = 'J';
+				break;
+		}
+		return notch;
+	}
 	public static Dictionary<Char, Char> Rotor(String name)
 	{
 		Dictionary<Char, Char> map = new Dictionary<char, char>();

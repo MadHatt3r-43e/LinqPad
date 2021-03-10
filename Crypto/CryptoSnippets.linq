@@ -13,3 +13,12 @@ Console.WriteLine("Index of " + checkoutLetter.ToString() + " is " + index);
 Console.WriteLine("Index of " + checkoutLetter2.ToString() + " is " + index2);
 
 Console.WriteLine("(" + index + " + " + index2 + ") % 26 = " + ((index + index2) % 26).ToString() );
+
+Char a = 'A';
+UInt16 aInt = Convert.ToUInt16(a);
+
+Char b = (Char)(Convert.ToUInt16(a) + 1);
+
+Console.WriteLine(a);
+Console.WriteLine(aInt);
+Console.WriteLine(b);
