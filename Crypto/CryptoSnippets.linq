@@ -3,7 +3,8 @@
 char[] alphabet = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
 
 
-char checkoutLetter = 'Q';
+
+char checkoutLetter = ')';
 char checkoutLetter2 = 'Z';
 
 int index = Array.IndexOf(alphabet, checkoutLetter);
@@ -18,7 +19,7 @@ Char a = 'A';
 UInt16 aInt = Convert.ToUInt16(a);
 
 
-Char whatever = '/';
+Char whatever = ')';
 UInt16 intWhatever = Convert.ToUInt16(whatever);
 
 

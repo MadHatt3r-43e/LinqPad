@@ -3,35 +3,35 @@
 
 // Plug Play
 // plugs contains a Plug for every key that maps to another key
-List<Plug> plugs = new List<Plug>();
+//List<Plug> plugs = new List<Plug>();
+//
+//// plugwire A-B
+//Plug pAB = new Plug('A', 'B');
+//Plug pBA = new Plug('B', 'A');
+//
+//Plug pTJ = new Plug('T', 'J');
+//Plug pJT = new Plug('J', 'T');
 
-// plugwire A-B
-Plug pAB = new Plug('A', 'B');
-Plug pBA = new Plug('B', 'A');
-
-Plug pTJ = new Plug('T', 'J');
-Plug pJT = new Plug('J', 'T');
-
-plugs.Add(pAB);
-plugs.Add(pBA);
-plugs.Add(pTJ);
-plugs.Add(pJT);
-
-Char searchChar = 'A';
-bool plugAExists = plugs.Any(p => p.value == searchChar);
-Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExists);
-
-searchChar = 'B';
-bool plugAExistsb = plugs.Any(p => p.value == searchChar);
-Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExistsb);
-
-searchChar = 'T';
-bool plugAExistsc = plugs.Any(p => p.value == searchChar);
-Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExistsb);
-
-searchChar = 'W';
-bool plugAExistsw = plugs.Any(p => p.value == searchChar);
-Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExistsw);
+//plugs.Add(pAB);
+//plugs.Add(pBA);
+//plugs.Add(pTJ);
+//plugs.Add(pJT);
+//
+//Char searchChar = 'A';
+//bool plugAExists = plugs.Any(p => p.value == searchChar);
+//Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExists);
+//
+//searchChar = 'B';
+//bool plugAExistsb = plugs.Any(p => p.value == searchChar);
+//Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExistsb);
+//
+//searchChar = 'T';
+//bool plugAExistsc = plugs.Any(p => p.value == searchChar);
+//Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExistsb);
+//
+//searchChar = 'W';
+//bool plugAExistsw = plugs.Any(p => p.value == searchChar);
+//Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExistsw);
 
 //plugs.Dump();
 // -------------------------------
@@ -40,38 +40,42 @@ Console.WriteLine("Plugs has plug " + searchChar + " == " + plugAExistsw);
 
 // Plugboard
 
-ReturnInput ri = ShowPlugboardOutput;
-// delegate to handle 
-void ShowPlugboardOutput(Char c)
-{
-	Console.WriteLine(" returned " + c.ToString() + " from the plugboard.");
-}
+//ReturnInput ri = ShowPlugboardOutput;
+//// delegate to handle 
+//void ShowPlugboardOutput(Char c)
+//{
+//	Console.WriteLine(" returned " + c.ToString() + " from the plugboard.");
+//}
+//
+//Plugboard pgBoard = new Plugboard(null, null);
+//	pgBoard.AddPlugwire('A','B');
+//	pgBoard.AddPlugwire('J','T');
+//	pgBoard.AddPlugwire('R','S');
+//	pgBoard.AddPlugwire('Y','D');
+//	pgBoard.AddPlugwire('Y','D');
+//
+//Console.WriteLine(pgBoard.ToString());
+//
+//Char keyEntered = 'J';
+//Char keyOutput = pgBoard.ProcessSignal(keyEntered);
+//Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
+//keyEntered = 'A';
+//keyOutput = pgBoard.ProcessSignal(keyEntered);
+//Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
+//keyEntered = 'B';
+//keyOutput = pgBoard.ProcessSignal(keyEntered);
+//Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
+//keyEntered = 'T';
+//keyOutput = pgBoard.ProcessSignal(keyEntered);
+//Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
+//keyEntered = 'E';
+//
+//Console.WriteLine();
+//Console.WriteLine("Enigma machine output below.........");
 
-Plugboard pgBoard = new Plugboard(null, null);
-	pgBoard.AddPlugwire('A','B');
-	pgBoard.AddPlugwire('J','T');
-	pgBoard.AddPlugwire('R','S');
-	pgBoard.AddPlugwire('Y','D');
-	pgBoard.AddPlugwire('Y','D');
 
-Console.WriteLine(pgBoard.ToString());
 
-Char keyEntered = 'J';
-Char keyOutput = pgBoard.ProcessSignal(keyEntered);
-Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
-keyEntered = 'A';
-keyOutput = pgBoard.ProcessSignal(keyEntered);
-Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
-keyEntered = 'B';
-keyOutput = pgBoard.ProcessSignal(keyEntered);
-Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
-keyEntered = 'T';
-keyOutput = pgBoard.ProcessSignal(keyEntered);
-Console.WriteLine(keyEntered.ToString() + " returned " + keyOutput.ToString() + " from the plugboard.");
-keyEntered = 'E';
 
-Console.WriteLine();
-Console.WriteLine("Enigma machine output below.........");
 
 // EnigmaMachine delegates
 OutputMessage om = ShowOutput;
@@ -85,12 +89,28 @@ void ShowObjectProcessing(Char input, Char output, String processingObject)
 	Console.WriteLine(processingObject + ": " + input.ToString() + " => " + output.ToString());
 }
 
-Console.WriteLine("Test Execution");Console.WriteLine();Console.WriteLine();
+Console.WriteLine("Test Execution");Console.WriteLine();
 EnigmaMachine em = new EnigmaMachine(om, sp );
 //Char testChar = 'A';
 //Char result = em.FakeyDriver(testChar);
 
-String testMessage = "AAAAAAAAAAAA";
+// ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+String testMessage = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+testMessage = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPFGHIJKLMNOPQRSTUVFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOP";
+
+// need a really long message?
+const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXY";
+Random random = new Random();
+String stuff = new String(Enumerable.Repeat(chars, 2500)
+  .Select(s => s[random.Next(s.Length)]).ToArray());
+
+testMessage = stuff;
+  
+// line 295 == rotor settings
+Char globalRotorPlacement = 'A';
+Char globalRingSetting = 'A';
+
 String returnedMessage = String.Empty;
 StringBuilder encryptedSB = new StringBuilder();
 foreach(Char c in testMessage.ToCharArray())
@@ -111,7 +131,8 @@ public delegate void ShowProcess(Char input, Char output, String processingObjec
 public delegate void OutputMessage(String message);
 
 public delegate void SignalReflected(Char c);
-
+public delegate void RotorAdvancementChannel(Int16 slotNumber, String name, Char advancedOnCharacterPosition);
+	
 public class EnigmaMachine
 {
 	private  List<EnigmaObject> objects;
@@ -164,11 +185,10 @@ public class EnigmaMachine
 	// User Settings after machine built
 	public void InitMachine()
 	{
-		//AddPlugwire('A', 'B');
-		//AddPlugwire('J', 'T');
-		//AddPlugwire('R', 'S');
-		//AddPlugwire('Y', 'D');
-		//AddPlugwire('Y', 'D');
+		AddPlugwire('J', 'T');
+		AddPlugwire('R', 'S');
+		AddPlugwire('Y', 'D');
+		AddPlugwire('Y', 'D');
 
 	}
 	
@@ -181,17 +201,24 @@ public class EnigmaMachine
 	
 	public Char FakeyDriver(Char c)
 	{
-		if(om != null) om("Processing character: " + c.ToString());
+		if(om != null) om(Environment.NewLine + "Processing character: " + c.ToString());
 		Char output = c;
+		
+		// PlugBoard => Rotors => Reflector
 		foreach(EnigmaObject o in objects)
 		{
 			output = o.ProcessSignal(output);
 		}
 
+		// => Back propogate through rotors
 		 RotorAssembly ra = (RotorAssembly)objects.Find(t => t is RotorAssembly);
-		 Char finalEncoding = ra.BackProcessSignal(latchedReflectedSignal);
+		 Char rotorOutput = ra.BackProcessSignal(latchedReflectedSignal);
 		
-		if(om != null) om("Enigma Machine returned " + finalEncoding.ToString() + " for input "  + c.ToString());
+		// => Lastly, back through the Plugboard
+		Plugboard pb = (Plugboard)objects.Find(t => t is Plugboard);
+		output = pb.ProcessSignal(rotorOutput);
+		
+		if(om != null) om("Enigma Machine returned " + output.ToString() + " for input "  + c.ToString());
 		return output;
 		// delegate output once done to Lampboard
 	}
@@ -209,6 +236,7 @@ public class RotorAssembly : EnigmaObject
 	
 	private OutputMessage om;
 	private ShowProcess sp;
+	RotorAdvancementChannel rac;
 	
 	private List<Rotor> rotors;
 	public RotorAssembly(OutputMessage om = null, ShowProcess sp = null)
@@ -222,6 +250,9 @@ public class RotorAssembly : EnigmaObject
 			this.sp = sp;
 		}
 		rotors = new List<Rotor>();
+		
+		rac = ReceiveRotorAdvancement;
+		// drive with config file
 		AssembleRotors();
 		
 	}
@@ -251,16 +282,31 @@ public class RotorAssembly : EnigmaObject
 		if (sp != null)  sp(signal, output, String.Format("Rotor Assembly: Reverse"));
 		return output;
 	}
+
+	private void AdvanceRotors()
+	{
+		// Advance the rotors by manually advancing the first rotor
+		// The cascade of rotor advancements will happen on delegates
+		// simply bump the first rotor
+		Rotor r = rotors[0];
+		r.Advance();
+		if (om != null) om("Advance Rotors...");
+	}
 	
 	private void AssembleRotors()
 	{
+		
+		// Do I want the rotor to know where it is in the machine?
 		if(om != null) om("Assemble Rotors");
-		Rotor r1 = new Rotor("I", om, sp);
-		Rotor r2 = new Rotor("III", om, sp);
-		Rotor r3 = new Rotor("IV", om, sp);
+		Rotor r1 = new Rotor("I"   , 1, rac, om, sp);
+		Rotor r2 = new Rotor("III" , 2, rac, om, sp);
+		Rotor r3 = new Rotor("IV"  , 3, rac, om, sp);
 		bool success;
-		Char rotorPlacement = 'K';
-		Char ringSetting = 'B';
+
+
+		
+		Char rotorPlacement = 'A';
+		Char ringSetting = 'A';
 		success = AddRotor(r1, rotorPlacement, ringSetting);
 		success = AddRotor(r2, rotorPlacement, ringSetting);
 		success = AddRotor(r3, rotorPlacement, ringSetting);
@@ -289,16 +335,28 @@ public class RotorAssembly : EnigmaObject
 		return rotorAdded;
 	}
 	
-	private void AdvanceRotors()
+	// delegate function to handle rotor advancement signals
+	void ReceiveRotorAdvancement (Int16 slotNumberAdvanced, String name, Char advancedOnCharacterPosition)
 	{
-		Rotor r = rotors[0];
-		r.Advance();
-		if(om != null) om("Advance Rotors");
+		// which rotor triggered it's notch 
+		// call advance on rotor to it's left
+		
+		// find next rotor to advance
+		Rotor r = rotors.Find(r => r.slot == slotNumberAdvanced + 1);
+		if( r != null )
+		{
+			r.Advance();
+		}
 	}
+	
+	
 }
 
 public class Rotor : EnigmaObject
 {
+	
+	private static UInt16 lastOfAlphabet = 90;
+	private static UInt16 startOfAlphabet = 65;
 	// messaging delegates
 	private OutputMessage om;
 	private ShowProcess sp;
@@ -317,15 +375,27 @@ public class Rotor : EnigmaObject
 	public Char position;
 	private Char lastOutput;
 	
-	public Rotor(String Name, OutputMessage om = null, ShowProcess sp = null)
+	private RotorAdvancementChannel rac;
+	// One based 
+	public Int16 slot;
+	
+	public Rotor(String Name
+	, Int16 Slot
+	, RotorAdvancementChannel rac = null
+	, OutputMessage om = null
+	, ShowProcess sp = null)
 	{
 		name = Name;
+		slot = Slot;
 		notch = MapConfig.Notch(Name);
 		map = MapConfig.Rotor(Name);
 		
 		// Default the rotor to RingSetting 'A'
 		// Set after construction as part of 
-		
+		if (rac != null)
+		{
+			this.rac = rac;
+		}
 		if (om != null)
 		{
 			this.om = om;
@@ -339,21 +409,52 @@ public class Rotor : EnigmaObject
 	public void RingSetting(Char rs)
 	{
 		ringSetting = rs;
-		ringSettingInt = (UInt16)(Convert.ToUInt16(rs) % 65);
+		ringSettingInt = (UInt16)(Convert.ToUInt16(rs) % startOfAlphabet);
 	}
 	
 
-
+	// 
 	public void Advance()
 	{
-		UInt16 positionInt = Convert.ToUInt16(position);
-		UInt16 one = 1;
-		position = Convert.ToChar((UInt16) ( ((positionInt + one) )  ) );
+
+		// if I determine the notch has passed
+		// fire on delegate appropriate information about this rotor
+
+		// this shouldn't be this.position, but it will exercise the delegate channel.
+		if (rac != null)
+		{
+			if (CharPlusUInt(position, ringSettingInt) == notch)
+			{
+				rac(this.slot, this.name, this.position);
+			}
+		}
+		
+		position = AlphaIncrement(position);
 		if (om != null)
 		{
-			String advanceInfo = "Position advanced to " + position.ToString();
+			String advanceInfo = "Rotor " + name + " position advanced to " + position.ToString();
 			om(advanceInfo);
 		}
+	}
+	
+	// used to increment position which is % 90
+	private Char AlphaIncrement ( Char s)
+	{
+		Char retval = ++s > (UInt16)lastOfAlphabet ? 'A' : s;
+		return retval;
+	}
+	
+	UInt16 GetOrdinalRingPosition()
+	{
+		UInt16 intPos = Convert.ToUInt16(position);
+		return (UInt16)(intPos - startOfAlphabet + 1);
+	}
+	private Char CharPlusUInt ( Char c, UInt16 incrementBy)
+	{
+		UInt16 tmpInt = (Char)(c + incrementBy);
+		tmpInt = tmpInt > lastOfAlphabet ? (UInt16)(tmpInt - lastOfAlphabet) : tmpInt;
+		Char r = Convert.ToChar(tmpInt);
+		return r;
 	}
 	
 	// coming off of ETW or other rotor
@@ -362,7 +463,18 @@ public class Rotor : EnigmaObject
 		
 		//Char pos = OffsetByPosition(signal);
 		// Add 0-indexed of RingSetting
-		Char output = map[(Char) ( (UInt16) ( (ringSettingInt + Convert.ToUInt16(position))  )  )];
+		UInt16 offset = (UInt16)( GetOrdinalRingPosition() + ringSettingInt);
+		
+		Char mapKey = CharPlusUInt(signal, offset ); 
+		if(! map.ContainsKey(mapKey))
+		{
+			if(om != null) om(String.Format("KEY NOT FOUND: Rotor {0} , Position: {1}, Signal {2}", name, position.ToString(), signal.ToString()));
+			var rand = new Random();
+			UInt16 randIntChar = (UInt16)rand.Next(65, 91);
+			return Convert.ToChar(randIntChar);
+		}
+		
+		Char output = map[mapKey];
 
 		if (sp != null)  sp(signal, output, String.Format("Rotor {0}", this.name));
 		lastOutput = output;
@@ -371,12 +483,7 @@ public class Rotor : EnigmaObject
 			String info = String.Format("Rotor {0}: Signal: {1} Position: {2} Last Output: {3} Ringsetting: {4}",
 				name, signal.ToString(), position.ToString(), output.ToString(), ringSetting.ToString());
 			om(info);
-			
-			if(output == this.notch)
-			{
-				om("SignalToAdvanceRotors");
-			}
-			
+
 		}
 		
 		return output;
