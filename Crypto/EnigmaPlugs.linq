@@ -97,7 +97,7 @@ EnigmaMachine em = new EnigmaMachine(om, sp );
 // ABCDEFGHIJKLMNOPQRSTUVWXYZ
 
 String testMessage = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-testMessage = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPFGHIJKLMNOPQRSTUVFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOP";
+testMessage = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 // need a really long message?
 const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXY";
@@ -105,7 +105,7 @@ Random random = new Random();
 String stuff = new String(Enumerable.Repeat(chars, 2500)
   .Select(s => s[random.Next(s.Length)]).ToArray());
 
-testMessage = stuff;
+// testMessage = stuff;
   
 // line 295 == rotor settings
 Char globalRotorPlacement = 'A';
@@ -115,13 +115,17 @@ String returnedMessage = String.Empty;
 StringBuilder encryptedSB = new StringBuilder();
 foreach(Char c in testMessage.ToCharArray())
 {
-	Char encrypted = em.FakeyDriver(c);
+	Char encrypted = em.ProcessSignal(c);
 	encryptedSB.Append(encrypted.ToString());
 }
 returnedMessage = encryptedSB.ToString();
 Console.WriteLine(testMessage);
 Console.WriteLine(returnedMessage);
 
+public abstract class EnigmaObject
+{
+	public abstract Char ProcessSignal(Char input);
+}
 
 // delegate that issues output of function on delegate
 public delegate void ReturnInput(Char c);
@@ -133,7 +137,7 @@ public delegate void OutputMessage(String message);
 public delegate void SignalReflected(Char c);
 public delegate void RotorAdvancementChannel(Int16 slotNumber, String name, Char advancedOnCharacterPosition);
 	
-public class EnigmaMachine
+public class EnigmaMachine : EnigmaObject
 {
 	private  List<EnigmaObject> objects;
 	
@@ -142,9 +146,10 @@ public class EnigmaMachine
 	private OutputMessage om;
 	private SignalReflected sf;
 	
+	// signal output from the reflector
 	private Char latchedReflectedSignal;
 	
-	public EnigmaMachine(OutputMessage om = null, ShowProcess sp = null, bool showVerboseOutput = false)
+	public EnigmaMachine(OutputMessage om = null, ShowProcess sp = null, String config = null)
 	{
 		if (om != null)
 		{
@@ -155,18 +160,15 @@ public class EnigmaMachine
 			this.sp = sp;
 		}
 		
-		sf = ReceiveReflectedSignal;
-		showVerboseOutput = true;
-		
 		objects = new List<EnigmaObject>();
 		
 		Plugboard pgBoard = new Plugboard(om, sp);
 		objects.Add(pgBoard);
 
 		RotorAssembly ra = new RotorAssembly(om, sp);
-		
 		objects.Add(ra);
 		
+		sf = ReceiveReflectedSignal;
 		String reflectorName = "C";
 		Reflector reflector = new Reflector(reflectorName, sf,  om, sp);
 		objects.Add(reflector);
@@ -199,7 +201,7 @@ public class EnigmaMachine
 		return added;
 	}
 	
-	public Char FakeyDriver(Char c)
+	override public Char ProcessSignal(Char c)
 	{
 		if(om != null) om(Environment.NewLine + "Processing character: " + c.ToString());
 		Char output = c;
@@ -226,10 +228,7 @@ public class EnigmaMachine
 
 }
 
-public abstract class EnigmaObject
-{
-	public abstract Char ProcessSignal(Char input);
-}
+
 
 public class RotorAssembly : EnigmaObject
 {
@@ -239,7 +238,7 @@ public class RotorAssembly : EnigmaObject
 	RotorAdvancementChannel rac;
 	
 	private List<Rotor> rotors;
-	public RotorAssembly(OutputMessage om = null, ShowProcess sp = null)
+	public RotorAssembly(OutputMessage om = null, ShowProcess sp = null , String config = null)
 	{
 		if (om != null)
 		{
@@ -342,7 +341,7 @@ public class RotorAssembly : EnigmaObject
 		// call advance on rotor to it's left
 		
 		// find next rotor to advance
-		Rotor r = rotors.Find(r => r.slot == slotNumberAdvanced + 1);
+		Rotor r = rotors.Find(r => r.assemblySlot == slotNumberAdvanced + 1);
 		if( r != null )
 		{
 			r.Advance();
@@ -352,50 +351,61 @@ public class RotorAssembly : EnigmaObject
 	
 }
 
+// A == Char 'A'
+// A == Uint16 65
+// Offsets internally will use UInt16 65 - 90
+
 public class Rotor : EnigmaObject
 {
+	// constants
+	private readonly static UInt16 lastOfAlphabet = 90;
+	private readonly static UInt16 startOfAlphabet = 65;
 	
-	private static UInt16 lastOfAlphabet = 90;
-	private static UInt16 startOfAlphabet = 65;
-	// messaging delegates
+	// delegates
 	private OutputMessage om;
 	private ShowProcess sp;
-
-	// fixed property of the rotors
-	public readonly String name;
+	private RotorAdvancementChannel rac;
+	
+	// wiring map:  input, output
 	public readonly Dictionary<Char, Char> map;
+	
+	// position inwhich to signal next rotor to advance
 	private readonly Char notch;
 	
-	// ring that rotates 
+	// name of rotor:  Roman numeral representation
+	public readonly String name;
+	
+	// Ring setting.  This is where the rings letter A is placed.  
+	// ie.  Ring == A sits over rotor position G.
+	// Ring setting is an offset.
 	private Char ringSetting;
-	// integer representation of ringsetting used for offsetting signal processing
+	// UInt16 - Zero based ordinal position of of Ring.  A == 0, Z == 25
 	private UInt16 ringSettingInt;
 	
-	// Position of rotor.  The Letter facing from the Ring.  As the machine operates, the rotor position changes with each keypress.
+	// Position of rotor of rotor in machine as shown by letter facing from Ring.  
+	// As the machine operates, the right-most rotor position changes with each keypress.
 	public Char position;
+	// buffers the last value output from the rotor.  Simply helpful in sending messages on delegate.
 	private Char lastOutput;
 	
-	private RotorAdvancementChannel rac;
-	// One based 
-	public Int16 slot;
+	
+	// 1 based slot number.  Populate R to L.  Rightmost == 1. 
+	public Int16 assemblySlot;
 	
 	public Rotor(String Name
 	, Int16 Slot
-	, RotorAdvancementChannel rac = null
+	, RotorAdvancementChannel rac
 	, OutputMessage om = null
-	, ShowProcess sp = null)
+	, ShowProcess sp = null
+	, String config = null)
 	{
 		name = Name;
-		slot = Slot;
+		assemblySlot = Slot;
 		notch = MapConfig.Notch(Name);
 		map = MapConfig.Rotor(Name);
 		
-		// Default the rotor to RingSetting 'A'
-		// Set after construction as part of 
-		if (rac != null)
-		{
-			this.rac = rac;
-		}
+		this.rac = rac;
+		
 		if (om != null)
 		{
 			this.om = om;
@@ -406,77 +416,52 @@ public class Rotor : EnigmaObject
 		}
 	}
 
-	public void RingSetting(Char rs)
-	{
-		ringSetting = rs;
-		ringSettingInt = (UInt16)(Convert.ToUInt16(rs) % startOfAlphabet);
-	}
-	
-
-	// 
+	// All rotors first advance, then the signal is processed
 	public void Advance()
 	{
-
-		// if I determine the notch has passed
-		// fire on delegate appropriate information about this rotor
-
-		// this shouldn't be this.position, but it will exercise the delegate channel.
-		if (rac != null)
+		// detect if this is the position to send signal to advance rotor to left
+		if (ShouldAdvanceNextRotor())
 		{
-			if (CharPlusUInt(position, ringSettingInt) == notch)
-			{
-				rac(this.slot, this.name, this.position);
-			}
+			rac(this.assemblySlot, this.name, this.position);
 		}
-		
-		position = AlphaIncrement(position);
+
+		position = IncrementPosition(position);
 		if (om != null)
 		{
 			String advanceInfo = "Rotor " + name + " position advanced to " + position.ToString();
 			om(advanceInfo);
 		}
 	}
-	
-	// used to increment position which is % 90
-	private Char AlphaIncrement ( Char s)
+
+	// have we reached the notch?
+	private bool ShouldAdvanceNextRotor()
 	{
-		Char retval = ++s > (UInt16)lastOfAlphabet ? 'A' : s;
-		return retval;
-	}
-	
-	UInt16 GetOrdinalRingPosition()
-	{
-		UInt16 intPos = Convert.ToUInt16(position);
-		return (UInt16)(intPos - startOfAlphabet + 1);
-	}
-	private Char CharPlusUInt ( Char c, UInt16 incrementBy)
-	{
-		UInt16 tmpInt = (Char)(c + incrementBy);
-		tmpInt = tmpInt > lastOfAlphabet ? (UInt16)(tmpInt - lastOfAlphabet) : tmpInt;
-		Char r = Convert.ToChar(tmpInt);
-		return r;
+		bool advanceNextRotor = false;
+		
+		if (AlphabetModAdd(position, ringSetting) == notch)
+		{
+			advanceNextRotor = true;
+		}
+		return advanceNextRotor;
 	}
 	
 	// coming off of ETW or other rotor
 	override public Char ProcessSignal(Char signal)
 	{
-		
-		//Char pos = OffsetByPosition(signal);
-		// Add 0-indexed of RingSetting
-		UInt16 offset = (UInt16)( GetOrdinalRingPosition() + ringSettingInt);
-		
-		Char mapKey = CharPlusUInt(signal, offset ); 
-		if(! map.ContainsKey(mapKey))
+		// I need to really think about how this forward loops and offsets with crazy values.
+		Char offset = AlphabetModAdd(position, ringSetting);
+		Char mapKey = AlphabetModAdd(signal, offset);
+		if (!map.ContainsKey(mapKey))
 		{
-			if(om != null) om(String.Format("KEY NOT FOUND: Rotor {0} , Position: {1}, Signal {2}", name, position.ToString(), signal.ToString()));
+			if (om != null) om(String.Format("KEY NOT FOUND: Rotor {0} , Position: {1}, Signal {2}", name, position.ToString(), signal.ToString()));
 			var rand = new Random();
 			UInt16 randIntChar = (UInt16)rand.Next(65, 91);
 			return Convert.ToChar(randIntChar);
 		}
-		
+
 		Char output = map[mapKey];
 
-		if (sp != null)  sp(signal, output, String.Format("Rotor {0}", this.name));
+		if (sp != null) sp(signal, output, String.Format("Rotor {0}", this.name));
 		lastOutput = output;
 		if (om != null)
 		{
@@ -485,11 +470,50 @@ public class Rotor : EnigmaObject
 			om(info);
 
 		}
-		
 		return output;
 	}
 	
-
+	// ringsetting is the character said to be 'the dot'  ie.  it's a character, it's also ordinal position away from 'A'
+	public void RingSetting(Char rs)
+	{
+		ringSetting = rs;
+		// zero based ordinal position of ringsetting
+		ringSettingInt = (UInt16)(CharInt(rs) - startOfAlphabet);
+	}
+	
+	private UInt16 CharInt(Char c)
+	{
+		return (UInt16)(Convert.ToUInt16(c));
+	}
+	
+	private Char AlphabetModAdd(Char a, Char b)
+	{
+		UInt16 intSum = (UInt16)( CharInt(a) + CharInt(b) );
+		UInt16 alphabetAdjusted =  intSum > lastOfAlphabet ? (UInt16)(intSum - lastOfAlphabet) : intSum;
+		return Convert.ToChar(alphabetAdjusted);
+	}
+	// used to increment position
+	// Increments one
+	private Char IncrementPosition ( Char position)
+	{
+		Char newPosition = ++position > (UInt16)lastOfAlphabet ? 'A' : position;
+		return newPosition;
+	}
+	
+	//UInt16 GetOrdinalRingPosition()
+	//{
+	//	UInt16 intPos = Convert.ToUInt16(position);
+	//	return (UInt16)(intPos - startOfAlphabet + 1);
+	//}
+	
+	//private Char CharPlusUInt ( Char c, UInt16 incrementBy)
+	//{
+	//	UInt16 tmpInt = (Char)(c + incrementBy);
+	//	tmpInt = tmpInt > lastOfAlphabet ? (UInt16)(tmpInt - lastOfAlphabet) : tmpInt;
+	//	Char r = Convert.ToChar(tmpInt);
+	//	return r;
+	//}
+	
 }
 
 
@@ -530,39 +554,174 @@ public class Reflector : EnigmaObject
 	}
 }
 
+
+// the plugboard contains a list of plugs
+// for each wire connecting two plugs  A <=> B, a plug will exist in the plugboard for A => B and B => A
+public class Plugboard : EnigmaObject
+{
+	// delegates
+	ShowProcess sp;
+	OutputMessage om;
+	
+	List<Plug> plugs;
+	
+	public Plugboard(OutputMessage om = null, ShowProcess sp = null)
+	{
+		plugs = new List<Plug>();
+		if( sp != null )
+		{
+			this.sp = sp;
+		}
+		if (om != null)
+		{
+			this.om = om;
+		}
+	}
+	
+	override public Char ProcessSignal(Char signal)
+	{
+		// if a plug does not exist, the signal will be passed through
+		Char output = signal;
+		bool plugExists = plugs.Any(p => p.value == signal);
+		if (plugExists)
+		{
+			// Find plug
+			Plug p = plugs.Find(p => p.value == signal);
+			output = p.pointsTo;
+		}
+
+		if (sp != null)
+		{
+			sp(signal, output, "Plugboard");
+		}
+		return output;
+	}
+
+	// Adding one logical plugwire between A && B will add two plugs:  A=>B, B=>A
+	public bool AddPlugwire(Char A, Char B)
+	{
+		bool plugAExists = plugs.Any(p => p.value == A);
+		bool plugBExists = plugs.Any(p => p.value == B);
+		if (plugAExists || plugBExists)
+		{
+			String errorMessage = "Cannot add this configuration to plugboard: " + A.ToString() + " => " + B.ToString();
+			if (om != null) om(errorMessage);
+			return false;
+		}
+
+		try
+		{
+			Plug newPlugA = new Plug(A, B);
+			Plug newPlugB = new Plug(B, A);
+			plugs.Add(newPlugA);
+			plugs.Add(newPlugB);
+			if (om != null)
+			{
+				String addedPlugwireMessage = String.Format("Added plug wire {0} => {1}", A.ToString(), B.ToString());
+				om(addedPlugwireMessage);
+			}
+			return true;
+		}
+		catch( Exception ex)
+		{
+			if (om != null)
+			{
+				om("Failed to add plug");
+			}
+			return false;
+		}
+	}
+	
+	public override String ToString()
+	{
+		String plugboardString = "Plugboard =>" + Environment.NewLine;
+		foreach(Plug p in plugs)
+		{
+			plugboardString += p.ToString() + Environment.NewLine;
+		}
+		return plugboardString;
+	}
+	
+}
+
+
+// a plug is akin to a vertex in a directed graph
+// A plug contains a mapping from one position on the plugboard to another.
+// A plug is directed, not biDirectional
+public class Plug : IEquatable<Plug>
+{
+	public  Char value;
+	public  Char pointsTo;
+
+	public Plug(Char v, Char p)
+	{
+		value = v;
+		pointsTo = p;
+	}
+
+	public override String ToString()
+	{
+		return String.Format("{0}=>{1}", value, pointsTo);
+	}
+	
+	public override int GetHashCode()
+	{
+		return (int)value;
+	}
+	
+	public bool Equals(Plug other)
+	{
+		if (other == null)
+			return false;
+
+		return (this.value == other.value);
+	}
+
+	public bool Equals(Char val)
+	{
+		return (this.value == val);
+	}
+	public override bool Equals(object obj)
+	{
+		return base.Equals(obj);
+	}
+
+}
+
+// setup
 public static class MapConfig
 {
-	public static Dictionary<Char, Char> Reflector (String name)
+	public static Dictionary<Char, Char> Reflector(String name)
 	{
 		Dictionary<Char, Char> map = new Dictionary<char, char>();
 		if (name == "C")
 		{
-			map.Add('A', 'F' );
-			map.Add('B', 'V' );
-			map.Add('C', 'P' );
-			map.Add('D', 'J' );
-			map.Add('E', 'I' );
-			map.Add('F', 'A' );
-			map.Add('G', 'O' );
-			map.Add('H', 'Y' );
-			map.Add('I', 'E' );
-			map.Add('J', 'D' );
-			map.Add('K', 'R' );
-			map.Add('L', 'Z' );
-			map.Add('M', 'X' );
-			map.Add('N', 'W' );
-			map.Add('O', 'G' );
-			map.Add('P', 'C' );
-			map.Add('Q', 'T' );
-			map.Add('R', 'K' );
-			map.Add('S', 'U' );
-			map.Add('T', 'Q' );
-			map.Add('U', 'S' );
-			map.Add('V', 'B' );
-			map.Add('W', 'N' );
-			map.Add('X', 'M' );
-			map.Add('Y', 'H' );
-			map.Add('Z', 'L' );
+			map.Add('A', 'F');
+			map.Add('B', 'V');
+			map.Add('C', 'P');
+			map.Add('D', 'J');
+			map.Add('E', 'I');
+			map.Add('F', 'A');
+			map.Add('G', 'O');
+			map.Add('H', 'Y');
+			map.Add('I', 'E');
+			map.Add('J', 'D');
+			map.Add('K', 'R');
+			map.Add('L', 'Z');
+			map.Add('M', 'X');
+			map.Add('N', 'W');
+			map.Add('O', 'G');
+			map.Add('P', 'C');
+			map.Add('Q', 'T');
+			map.Add('R', 'K');
+			map.Add('S', 'U');
+			map.Add('T', 'Q');
+			map.Add('U', 'S');
+			map.Add('V', 'B');
+			map.Add('W', 'N');
+			map.Add('X', 'M');
+			map.Add('Y', 'H');
+			map.Add('Z', 'L');
 		}
 		return map;
 	}
@@ -570,8 +729,8 @@ public static class MapConfig
 	public static Char Notch(String name)
 	{
 		Char notch = 'A';
-		
-		switch ( name )
+
+		switch (name)
 		{
 			case "I":
 				notch = 'Q';
@@ -708,130 +867,6 @@ public static class MapConfig
 			map.Add('Z', 'B');
 		}
 		return map;
-	}
-
-}
-
-public class Plugboard : EnigmaObject
-{
-	// delegate telling where to send output to
-	// ReturnInput ri;
-	
-	ShowProcess sp;
-	OutputMessage om;
-	List<Plug> plugs;
-	
-	public Plugboard(OutputMessage om = null, ShowProcess sp = null)
-	{
-		plugs = new List<Plug>();
-		//if (ri != null)
-		//{
-		//	this.ri = ri;
-		//}
-		if( sp != null )
-		{
-			this.sp = sp;
-		}
-		if (om != null)
-		{
-			this.om = om;
-		}
-	}
-
-	public override String ToString()
-	{
-		String plugboardString = "Plugboard =>" + Environment.NewLine;
-		foreach(Plug p in plugs)
-		{
-			plugboardString += p.ToString() + Environment.NewLine;
-		}
-		return plugboardString;
-	}
-	
-	public bool AddPlugwire(Char A, Char B)
-	{
-		bool plugAExists = plugs.Any(p => p.value == A);
-		bool plugBExists = plugs.Any(p => p.value == B);
-		if (plugAExists || plugBExists)
-		{
-			String errorMessage = "Cannot add this configuration to plugboard: " + A.ToString() + " => " + B.ToString();
-			if(om != null) om(errorMessage);
-			return false;
-		}
-
-		Plug newPlugA = new Plug(A, B);
-		Plug newPlugB = new Plug(B, A);
-		plugs.Add(newPlugA);
-		plugs.Add(newPlugB);
-		if (om != null)
-		{
-			String addedPlugwireMessage = String.Format("Added plug wire {0} => {1}", A.ToString(), B.ToString());
-			om(addedPlugwireMessage);
-		}
-		return true;
-	}
-
-
-	override public Char ProcessSignal(Char signal)
-	{
-		bool plugExists = plugs.Any(p => p.value == signal);
-		Char output = signal;
-		if (plugExists)
-		{
-			// Find plug
-			Plug p = plugs.Find(p => p.value == signal);
-			output = p.pointsTo;
-		}
-
-		if (sp != null)
-		{
-			sp(signal, output, "Plugboard");
-		}
-		return output;
-	}
-	
-
-}
-
-
-
-// a plug is akin to a vertex in a directed graph
-public class Plug : IEquatable<Plug>
-{
-	public  Char value;
-	public  Char pointsTo;
-
-	public Plug(Char v, Char p)
-	{
-		value = v;
-		pointsTo = p;
-	}
-
-	public override String ToString()
-	{
-		return String.Format("{0}=>{1}", value, pointsTo);
-	}
-	
-	public override int GetHashCode()
-	{
-		return (int)value;
-	}
-	
-	public bool Equals(Plug other)
-	{
-		if (other == null)
-			return false;
-
-		return (this.value == other.value);
-	}
-
-	public bool Equals(Char val)
-	{
-		return (this.value == val);
-	}
-	public override bool Equals(object obj)
-	{
-		return base.Equals(obj);
 	}
 
 }
