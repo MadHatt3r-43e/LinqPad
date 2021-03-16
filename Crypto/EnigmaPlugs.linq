@@ -89,36 +89,36 @@ void ShowObjectProcessing(Char input, Char output, String processingObject)
 	Console.WriteLine(processingObject + ": " + input.ToString() + " => " + output.ToString());
 }
 
-Console.WriteLine("Test Execution");Console.WriteLine();
-EnigmaMachine em = new EnigmaMachine(om, sp );
-//Char testChar = 'A';
-//Char result = em.FakeyDriver(testChar);
-
-// ABCDEFGHIJKLMNOPQRSTUVWXYZ
-
+// Messages
 String testMessage = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 testMessage = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-// need a really long message?
+testMessage = "C";
+//testMessage = "AUERJCTNMQQTXFYPAHIVCTYRSIAABKBAIWFLCHHKTKPXWSXAYGSCMDCPKDAURWZWQWUFBGGTYTAJZGSSCBCGOLYLQOVIVR";
+
+//testMessage = "THEBROWNFOX";
+
+
+
+
 const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXY";
 Random random = new Random();
 String stuff = new String(Enumerable.Repeat(chars, 2500)
   .Select(s => s[random.Next(s.Length)]).ToArray());
+// testMessage = stuff;  
 
-// testMessage = stuff;
-  
-// line 295 == rotor settings
-Char globalRotorPlacement = 'A';
-Char globalRingSetting = 'A';
+Console.WriteLine("Test Execution");Console.WriteLine();
 
-String returnedMessage = String.Empty;
-StringBuilder encryptedSB = new StringBuilder();
-foreach(Char c in testMessage.ToCharArray())
-{
-	Char encrypted = em.ProcessSignal(c);
-	encryptedSB.Append(encrypted.ToString());
-}
-returnedMessage = encryptedSB.ToString();
+// Setup machine
+EnigmaMachine em = new EnigmaMachine(om, sp );
+
+// line 325 == rotor settings
+em.SetRotorPosition(1, 'A');
+em.SetRotorPosition(2, 'A');
+em.SetRotorPosition(3, 'A');
+
+
+String returnedMessage = em.EncryptMessage(testMessage);
 Console.WriteLine(testMessage);
 Console.WriteLine(returnedMessage);
 
@@ -187,18 +187,25 @@ public class EnigmaMachine : EnigmaObject
 	// User Settings after machine built
 	public void InitMachine()
 	{
-		AddPlugwire('J', 'T');
-		AddPlugwire('R', 'S');
-		AddPlugwire('Y', 'D');
-		AddPlugwire('Y', 'D');
+		//AddPlugwire('J', 'T');
+		//AddPlugwire('R', 'S');
+		//AddPlugwire('Y', 'D');
+		//AddPlugwire('Y', 'D');
 
 	}
 	
-	public bool AddPlugwire(Char a, Char b)
+	public String EncryptMessage(String inputMessage, int chunkSize = 5)
 	{
-		Plugboard pg = (Plugboard)objects.Find(t => t is Plugboard);
-		bool added = pg.AddPlugwire(a, b);
-		return added;
+		String encryptedMessage = String.Empty;
+		StringBuilder encryptedSB = new StringBuilder();
+		foreach (Char c in inputMessage.ToCharArray())
+		{
+			Char encrypted = ProcessSignal(c);
+			encryptedSB.Append(encrypted.ToString());
+		}
+		encryptedMessage = encryptedSB.ToString();
+
+		return encryptedMessage; // MessageChunk(encryptedMessage, chunkSize);
 	}
 	
 	override public Char ProcessSignal(Char c)
@@ -225,6 +232,20 @@ public class EnigmaMachine : EnigmaObject
 		// delegate output once done to Lampboard
 	}
 
+	public bool AddPlugwire(Char a, Char b)
+	{
+		Plugboard pg = (Plugboard)objects.Find(t => t is Plugboard);
+		bool added = pg.AddPlugwire(a, b);
+		return added;
+	}
+	
+	// 
+	public bool SetRotorPosition(int rotorNumber, Char c)
+	{
+		RotorAssembly ra = (RotorAssembly)objects.Find(t => t is RotorAssembly);
+		bool success = ra.SetRotorPosition(rotorNumber, c);
+		return success;
+	}
 
 }
 
@@ -274,7 +295,10 @@ public class RotorAssembly : EnigmaObject
 		for(int i = rotors.Count - 1; i > -1; i--)
 		{
 			Char tmpOut = output;
+			// select rotor
 			Rotor r = rotors[i];
+			
+			// go from Value to Key 
 			output  = r.map.FirstOrDefault(x => x.Value == output).Key;
 			if (sp != null)  sp(tmpOut, output, String.Format("Rotor {0}: Reverse", r.name));	
 		}
@@ -303,9 +327,8 @@ public class RotorAssembly : EnigmaObject
 		bool success;
 
 
-		
-		Char rotorPlacement = 'G';
-		Char ringSetting = 'T';
+		Char rotorPlacement = 'A';
+		Char ringSetting = 'A';
 		success = AddRotor(r1, rotorPlacement, ringSetting);
 		success = AddRotor(r2, rotorPlacement, ringSetting);
 		success = AddRotor(r3, rotorPlacement, ringSetting);
@@ -348,6 +371,21 @@ public class RotorAssembly : EnigmaObject
 		}
 	}
 	
+	public bool SetRotorPosition(int rotorNum, Char c)
+	{
+		bool success = false;
+		try
+		{
+			Rotor r = rotors.Find(r => r.assemblySlot == rotorNum);
+			r.position = c;
+			success = true;
+		}
+		catch(Exception ex)
+		{
+			if(om != null) om("Error setting rotor");
+		}
+		return success;
+	}
 	
 }
 
@@ -494,14 +532,6 @@ public class Rotor : EnigmaObject
 		return (UInt16)(Convert.ToUInt16(c));
 	}
 	
-	//private Char AlphabetModAdd(Char a, Char b)
-	//{
-	//	UInt16 intSum = (UInt16)( CharInt(a) - startOfAlphabet + CharInt(b) - startOfAlphabet );
-	//	//UInt16 alphabetAdjusted =  intSum > lastOfAlphabet ? (UInt16)(intSum - lastOfAlphabet) : intSum;
-	//	UInt16 alphabetAdjusted =  (UInt16)(intSum % startOfAlphabet);
-	//	return Convert.ToChar(alphabetAdjusted);
-	//}
-	
 	// zero indexed ordinal position of Char ie. A == 0  Z == 25
 	private UInt16 OrdinalChar(Char a)
 	{
@@ -547,6 +577,8 @@ public class Reflector : EnigmaObject
 	override public Char ProcessSignal(Char signal)
 	{
 		Char output = map[signal];
+		
+		// issue output of reflector on delegate
 		sf(output);
 		if(sp != null)
 		{
@@ -872,3 +904,7 @@ public static class MapConfig
 	}
 
 }
+
+
+
+

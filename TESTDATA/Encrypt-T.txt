@@ -1,0 +1,27 @@
+Test Execution
+
+Assemble Rotors
+Added rotor I
+Added rotor III
+Added rotor IV
+
+Processing character: T
+Plugboard: T => T
+Rotor I position advanced to B
+Advance Rotors...
+Rotor I: T => A
+Rotor I: Signal: T Position: B Last Output: A Ringsetting: A
+Rotor III: A => B
+Rotor III: Signal: A Position: A Last Output: B Ringsetting: A
+Rotor IV: B => S
+Rotor IV: Signal: B Position: A Last Output: S Ringsetting: A
+Latched onto machine from reflector: U
+Reflector: S => U
+Rotor IV: Reverse: U => K
+Rotor III: Reverse: K => U
+Rotor I: Reverse: U => R
+Rotor Assembly: Reverse: U => R
+Plugboard: R => R
+Enigma Machine returned R for input T
+T
+R
