@@ -304,8 +304,8 @@ public class RotorAssembly : EnigmaObject
 
 
 		
-		Char rotorPlacement = 'A';
-		Char ringSetting = 'A';
+		Char rotorPlacement = 'G';
+		Char ringSetting = 'T';
 		success = AddRotor(r1, rotorPlacement, ringSetting);
 		success = AddRotor(r2, rotorPlacement, ringSetting);
 		success = AddRotor(r3, rotorPlacement, ringSetting);
@@ -438,7 +438,8 @@ public class Rotor : EnigmaObject
 	{
 		bool advanceNextRotor = false;
 		
-		if (AlphabetModAdd(position, ringSetting) == notch)
+		// the notch is on the ring.  position 
+		if (position == notch)
 		{
 			advanceNextRotor = true;
 		}
@@ -448,9 +449,16 @@ public class Rotor : EnigmaObject
 	// coming off of ETW or other rotor
 	override public Char ProcessSignal(Char signal)
 	{
-		// I need to really think about how this forward loops and offsets with crazy values.
-		Char offset = AlphabetModAdd(position, ringSetting);
-		Char mapKey = AlphabetModAdd(signal, offset);
+		// signal indicates where on the rotor the signal enters.  Rotating the rotor == advancing the position
+		UInt16 indexSignal = OrdinalChar(signal);
+		
+		// position of the rotor as indicated by the Ring
+		UInt16 indexPosition = OrdinalChar(position);
+		
+		// The key is the signal
+		UInt16 indexMapKey = (UInt16)( ( (indexSignal + indexPosition + ringSettingInt) %26) + startOfAlphabet);
+		
+		Char mapKey = Convert.ToChar(indexMapKey);
 		if (!map.ContainsKey(mapKey))
 		{
 			if (om != null) om(String.Format("KEY NOT FOUND: Rotor {0} , Position: {1}, Signal {2}", name, position.ToString(), signal.ToString()));
@@ -478,7 +486,7 @@ public class Rotor : EnigmaObject
 	{
 		ringSetting = rs;
 		// zero based ordinal position of ringsetting
-		ringSettingInt = (UInt16)(CharInt(rs) - startOfAlphabet);
+		ringSettingInt = OrdinalChar(rs);
 	}
 	
 	private UInt16 CharInt(Char c)
@@ -486,11 +494,18 @@ public class Rotor : EnigmaObject
 		return (UInt16)(Convert.ToUInt16(c));
 	}
 	
-	private Char AlphabetModAdd(Char a, Char b)
+	//private Char AlphabetModAdd(Char a, Char b)
+	//{
+	//	UInt16 intSum = (UInt16)( CharInt(a) - startOfAlphabet + CharInt(b) - startOfAlphabet );
+	//	//UInt16 alphabetAdjusted =  intSum > lastOfAlphabet ? (UInt16)(intSum - lastOfAlphabet) : intSum;
+	//	UInt16 alphabetAdjusted =  (UInt16)(intSum % startOfAlphabet);
+	//	return Convert.ToChar(alphabetAdjusted);
+	//}
+	
+	// zero indexed ordinal position of Char ie. A == 0  Z == 25
+	private UInt16 OrdinalChar(Char a)
 	{
-		UInt16 intSum = (UInt16)( CharInt(a) + CharInt(b) );
-		UInt16 alphabetAdjusted =  intSum > lastOfAlphabet ? (UInt16)(intSum - lastOfAlphabet) : intSum;
-		return Convert.ToChar(alphabetAdjusted);
+		return (UInt16)( CharInt(a) - startOfAlphabet);
 	}
 	// used to increment position
 	// Increments one
@@ -500,19 +515,6 @@ public class Rotor : EnigmaObject
 		return newPosition;
 	}
 	
-	//UInt16 GetOrdinalRingPosition()
-	//{
-	//	UInt16 intPos = Convert.ToUInt16(position);
-	//	return (UInt16)(intPos - startOfAlphabet + 1);
-	//}
-	
-	//private Char CharPlusUInt ( Char c, UInt16 incrementBy)
-	//{
-	//	UInt16 tmpInt = (Char)(c + incrementBy);
-	//	tmpInt = tmpInt > lastOfAlphabet ? (UInt16)(tmpInt - lastOfAlphabet) : tmpInt;
-	//	Char r = Convert.ToChar(tmpInt);
-	//	return r;
-	//}
 	
 }
 
