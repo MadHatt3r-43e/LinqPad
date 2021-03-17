@@ -92,13 +92,13 @@ void ShowObjectProcessing(Char input, Char output, String processingObject)
 // Messages
 String testMessage = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 testMessage = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-testMessage = "C";
+testMessage = "RZXDQEAMFTOZEHHMYMSSDRNTQVHKEELNEXKUEHFRNZPKVEIKCYHOBSWPCPGSDEVVPHSBPUANPOVGWGNSFLTJGYDGTVEIAMQNDHRSZSISRVIERHCIMRZXGDNFYPMJEWSSABTKKEGMEZKSGHAUNPSYKYXAXKPUDGGIPSBPCNWTOQFWVMRYAAOBPJCLYVCIAOFJKZPMLBQRXFJVIJEI";
+// testMessage = "W";
 //testMessage = "AUERJCTNMQQTXFYPAHIVCTYRSIAABKBAIWFLCHHKTKPXWSXAYGSCMDCPKDAURWZWQWUFBGGTYTAJZGSSCBCGOLYLQOVIVR";
 
 //testMessage = "THEBROWNFOX";
-
-
+//testMessage = "KMHGDFBSHKE";
+//testMessage = "N";
 
 
 const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXY";
@@ -291,15 +291,18 @@ public class RotorAssembly : EnigmaObject
 	// run through the rotors in reverse
 	public Char BackProcessSignal(Char signal)
 	{
+		// write signal into output so output can be passed through.
 		Char output = signal;
 		for(int i = rotors.Count - 1; i > -1; i--)
 		{
 			Char tmpOut = output;
 			// select rotor
 			Rotor r = rotors[i];
+			// offset backPropogated signal by rotor offset(s)
+			Char offsetSignal = r.SignalOffset(output);
 			
 			// go from Value to Key 
-			output  = r.map.FirstOrDefault(x => x.Value == output).Key;
+			output  = r.map.FirstOrDefault(x => x.Value == offsetSignal).Key;
 			if (sp != null)  sp(tmpOut, output, String.Format("Rotor {0}: Reverse", r.name));	
 		}
 		if (sp != null)  sp(signal, output, String.Format("Rotor Assembly: Reverse"));
@@ -488,15 +491,15 @@ public class Rotor : EnigmaObject
 	override public Char ProcessSignal(Char signal)
 	{
 		// signal indicates where on the rotor the signal enters.  Rotating the rotor == advancing the position
-		UInt16 indexSignal = OrdinalChar(signal);
-		
-		// position of the rotor as indicated by the Ring
+		//UInt16 indexSignal = OrdinalChar(signal);
+		//
+		//// position of the rotor as indicated by the Ring
 		UInt16 indexPosition = OrdinalChar(position);
+		//
+		//// The key is the signal
+		//UInt16 indexMapKey = (UInt16)( ( (indexSignal + indexPosition + ringSettingInt) %26) + startOfAlphabet);
 		
-		// The key is the signal
-		UInt16 indexMapKey = (UInt16)( ( (indexSignal + indexPosition + ringSettingInt) %26) + startOfAlphabet);
-		
-		Char mapKey = Convert.ToChar(indexMapKey);
+		Char mapKey = SignalOffset(signal);// Convert.ToChar(indexMapKey);
 		if (!map.ContainsKey(mapKey))
 		{
 			if (om != null) om(String.Format("KEY NOT FOUND: Rotor {0} , Position: {1}, Signal {2}", name, position.ToString(), signal.ToString()));
@@ -505,8 +508,12 @@ public class Rotor : EnigmaObject
 			return Convert.ToChar(randIntChar);
 		}
 
-		Char output = map[mapKey];
-
+		Char rotorMapOutput = map[mapKey];
+		
+		// shift output same as input?
+		UInt16 shiftedOutputKey = (UInt16)( ( (CharInt(rotorMapOutput) + indexPosition + ringSettingInt) %26) + startOfAlphabet);
+		Char output = Convert.ToChar(shiftedOutputKey);
+		
 		if (sp != null) sp(signal, output, String.Format("Rotor {0}", this.name));
 		lastOutput = output;
 		if (om != null)
@@ -519,6 +526,17 @@ public class Rotor : EnigmaObject
 		return output;
 	}
 	
+	public Char SignalOffset(Char signal)
+	{
+		UInt16 indexSignal = OrdinalChar(signal);
+
+		// position of the rotor as indicated by the Ring
+		UInt16 indexPosition = OrdinalChar(position);
+
+		// The key is the signal
+		UInt16 signalOffsetKey = (UInt16)(((indexSignal + indexPosition + ringSettingInt) % 26) + startOfAlphabet);
+		return Convert.ToChar(signalOffsetKey);
+	}
 	// ringsetting is the character said to be 'the dot'  ie.  it's a character, it's also ordinal position away from 'A'
 	public void RingSetting(Char rs)
 	{
